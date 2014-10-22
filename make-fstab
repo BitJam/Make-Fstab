@@ -316,6 +316,8 @@ do_update_mode() {
 do_create_mode() {
     MOUNTED_DEVS="$(grep ^/dev /proc/mounts | cut -d" " -f1,2)"
 
+    touch $FSTAB_FILE
+
     # First remove dynamic entries
     if grep -q "^\s*[^#\s]" $FSTAB_FILE; then
         qsay "Remove all dynamic entries from %s" $FSTAB_FILE
