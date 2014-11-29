@@ -37,6 +37,8 @@ BLKID=blkid
      SR_OPTIONS=noauto,exec,users
 
          MARKER="# Added by $ME"
+     OLD_MARKER="# Added by antiX"
+
    FSTAB_FORMAT="%-42s %-43s %-10s %-30s  %s\n"
 
          MP_DIR=/media
@@ -321,7 +323,7 @@ do_create_mode() {
     # First remove dynamic entries
     if grep -q "^\s*[^#\s]" $FSTAB_FILE; then
         qsay "Remove all dynamic entries from %s" $FSTAB_FILE
-        sed -i -e "/^$MARKER/{N;d;}" $FSTAB_FILE
+        sed -i -e "/^$MARKER/{N;d;}" -e "/^$OLD_MARKER/{N;d;}" $FSTAB_FILE
     fi
 
     [ "$DELETE_MODE" ] && vamoose "after deleting our entries"
