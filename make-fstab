@@ -323,7 +323,7 @@ do_create_mode() {
     # First remove dynamic entries
     if grep -q "^\s*[^#\s]" $FSTAB_FILE; then
         qsay "Remove all dynamic entries from %s" $FSTAB_FILE
-        sed -i -e "/^$MARKER/{N;d;}" -e "/^$OLD_MARKER/{N;d;}" $FSTAB_FILE
+        sed -i -r "/^($MARKER|$OLD_MARKER)/{N;d;}" $FSTAB_FILE
     fi
 
     [ "$DELETE_MODE" ] && vamoose "after deleting our entries"
@@ -608,7 +608,7 @@ cdrom_devices() {
 remove_entry(){
     # Remove comment line $1 and the following line from /etc/fstab
     local targ="$(echo $1 | sed 's=/=\\/=g')"
-    sed -r -i "/^$MARKER/{N;/$targ /d}" $FSTAB_FILE
+    sed -r -i "/^($MARKER|$OLD_MARKER)/{N;/$targ /d}" $FSTAB_FILE
 }
 
 
