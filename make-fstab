@@ -362,11 +362,8 @@ do_create_mode() {
 #------------------------------------------------------------------------------
 write_hard_drive_entries() {
 
-    local ID_FS_PARTLABEL ID_FS_PARTUUID ID_FS_SEC_TYPE ID_FS_TYPE ID_PART_TABLE_TYPE
-
     local dev label uuid
     while read dev; do
-        local ID_FS_TYPE= ID_FS_LABEL= ID_FS_UUID= ID_FS_LABEL_ENC= ID_FS_UUID_ENC=
 
         test -b $dev || continue
 
@@ -376,21 +373,31 @@ write_hard_drive_entries() {
             *) continue
         esac
 
-        eval $($SUDO $BLKID -o udev $dev)
+        local line val uuid_enc label_enc uuid_raw label_raw type
+        while read line; do
+            val=${line#*=}
+            case $line in
+                 ID_FS_UUID_ENC=*)   uuid_enc=$val ;;
+                ID_FS_LABEL_ENC=*)  label_enc=$val ;;
+                     ID_FS_UUID=*)   uuid_raw=$val ;;
+                    ID_FS_LABEL=*)  label_raw=$val ;;
+                     ID_FS_TYPE=*)       type=$val ;;
+            esac
+        done <<BLKID
+$($SUDO $BLKID -o udev $dev)
+BLKID
 
         if [ "$DO_ENCODE" ]; then
-            uuid=$ID_FS_UUID_ENC
-            label=$ID_FS_LABEL_ENC
+            uuid=$uuid_enc
+            label=$label_enc
         else
-            uuid=$ID_FS_UUID
-            label=$ID_FS_LABEL
+            uuid=$uuid_raw
+            label=$label_raw
         fi
 
         [ "$EXISTING_DEVS" ] && echo "$EXISTING_DEVS" \
-            | egrep -q "^$dev$|^UUID=$ID_FS_UUID$|^UUID=$ID_FS_UUID_ENC" \
+            | egrep -q "^$dev$|^UUID=$uuid_raw$|^UUID=$uuid_enc" \
             && continue
-
-        local type="$ID_FS_TYPE"
 
         if [ "$type" = swap ]; then
             write_hd_entry "$dev" "" "$type" "$uuid" "$label" "$label"
@@ -409,7 +416,7 @@ write_hard_drive_entries() {
         fi
 
         # Don't use a bogus uuid in first fstab field
-        [ "$ID_FS_UUID" != "$ID_FS_UUID_ENC" ] && uuid=
+        [ "$uuid_raw" != "$uuid_enc" ] && uuid=
 
         write_hd_entry "$dev" "$mntpnt" "$type" "$uuid" "$label"
         SD_CNT=$((SD_CNT + 1))
