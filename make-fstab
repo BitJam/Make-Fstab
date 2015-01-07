@@ -714,7 +714,7 @@ lock_file() {
         exec 8> $LOCK_FILE
         flock -x 8
         FLOCKED=true
-
+        trap unlock EXIT
     else
 
         # No flock so roll our own.  Collisions are unlikely but possible.
@@ -738,7 +738,8 @@ lock_file() {
 # Only needed when the flock program is not available.
 #------------------------------------------------------------------------------
 unlock() {
-    [ "$FLOCKED" ] || rm -f $LOCK_FILE
+    #[ "$FLOCKED" ] || rm -f $LOCK_FILE
+    rm -f $LOCK_FILE
     return 0
 }
 
