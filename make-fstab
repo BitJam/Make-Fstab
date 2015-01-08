@@ -373,7 +373,7 @@ write_hard_drive_entries() {
             *) continue
         esac
 
-        local line val uuid_enc label_enc uuid_raw label_raw type
+        local line val uuid_enc= label_enc= uuid_raw= label_raw= type=
         while read line; do
             val=${line#*=}
             case $line in
