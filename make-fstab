@@ -467,8 +467,12 @@ write_hd_entry() {
     local options="$SD_OPTIONS"
 
     case "$type" in
+        "")
+            return 0
+            ;;
+
         ext[234]|adfs|affs|btrfs|cifs|coda|cramfs|efs|hfs|hfsplus) ;;
-        hpfs|jfs|minix|ncpfs|nfs|qnx4|romfs|sysv|ubifs|ufs|xfs|"") ;;
+        hpfs|jfs|minix|ncpfs|nfs|qnx4|romfs|sysv|ubifs|ufs|xfs)    ;;
 
         reiserfs)
             options=$options,notail
