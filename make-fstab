@@ -443,7 +443,7 @@ BLKID
         [ "$AM_ROOT" ] && mount $mntpnt
 
     done << BLKID
-$($SUDO $BLKID -o device)
+$($SUDO blkid -o device)
 BLKID
 }
 
