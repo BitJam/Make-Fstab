@@ -22,11 +22,6 @@
 # https://www.kernel.org/doc/Documentation/devices.txt
 #-----------------------------------------------------------------------
 
-BLKID=blkid
-
-# # FIXME: for testing on Gentoo only
-# [ -d /usr/protage ] && BLKID=/mnt/sq1/sbin/blkid
-
              ME=$(basename $0)
         VERSION=2.0.0
    VERSION_DATE="Fri Mar 21 23:25:22 MDT 2014"
@@ -384,7 +379,7 @@ write_hard_drive_entries() {
                      ID_FS_TYPE=*)       type=$val ;;
             esac
         done <<BLKID
-$($SUDO $BLKID -o udev $dev)
+$($SUDO blkid -o udev $dev)
 BLKID
 
         if [ "$DO_ENCODE" ]; then
