@@ -382,6 +382,8 @@ write_hard_drive_entries() {
 $($SUDO blkid -o udev $dev)
 BLKID
 
+        [ "$type" ] || continue
+
         if [ "$DO_ENCODE" ]; then
             uuid=$uuid_enc
             label=$label_enc
