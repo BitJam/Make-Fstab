@@ -408,7 +408,7 @@ BLKID
         [ "$mntpnt" ] || mntpnt=$(unique_mp "$dev" "$uuid" "$label")
 
         if [ -z "$mntpnt" ]; then
-            error "Problem creating mountpoint for device $dev"
+            error "Problem finding mountpoint for device $dev"
             continue
         fi
 
