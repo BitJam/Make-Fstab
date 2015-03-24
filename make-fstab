@@ -240,7 +240,7 @@ do_update_mode() {
     add|change)
         # Remove the fstab entry if it was created by us
         # (the egrep is 20x faster than remove_entry)
-        egrep -q "^$dev |^UUID=$uuid " $FSTAB_FILE remove_entry "(UUID=$uuid|$dev)"
+        egrep -q "^$dev |^UUID=$uuid " $FSTAB_FILE && remove_entry "(UUID=$uuid|$dev)"
 
         # Don't do anything if there is an fstab entry not created by us
         egrep -q "^$dev |^UUID=$uuid " $FSTAB_FILE && vamoose "device $dev exists in fstab"
@@ -250,7 +250,7 @@ do_update_mode() {
 
         local mntpnt="$(unique_mp "$dev" "$uuid" "$label")"
 
-        [ -z "$mntpnt" ] || vamoose "problem creating a mountpoint for device $dev"
+        [ "$mntpnt" ] || vamoose "problem creating a mountpoint for device $dev"
 
         # Don't use a bogus uuid in first fstab field
         [ "$ID_FS_UUID" != "$ID_FS_UUID_ENC" ] && uuid=
