@@ -238,7 +238,7 @@ do_update_mode() {
 
     add|change)
 
-        [ "$ID_FS_TYPE" ] || vamoose "no filesystem type"
+        [ "$type" ] || vamoose "no filesystem type"
         # Remove the fstab entry if it was created by us
         # (the egrep is 20x faster than remove_entry)
         egrep -q "^$dev |^UUID=$uuid " $FSTAB_FILE && remove_entry "(UUID=$uuid|$dev)"
@@ -249,8 +249,7 @@ do_update_mode() {
         # Don't add an auto entry if the devices is already mounted
         grep -q "^$dev " /proc/mounts  && vamoose "device $dev is already mounted"
 
-
-        case $ID_FS_TYPE in
+        case $type in
             swap) local mntpnt=swap                                   ;;
                *) local mntpnt="$(unique_mp "$dev" "$uuid" "$label")" ;;
         esac
@@ -263,7 +262,10 @@ do_update_mode() {
         # Update fstab entry
         write_hd_entry "$dev" "$mntpnt" "$type" "$uuid" "$label"
 
-        mkdir -p $mntpnt
+        case $type in
+            swap) ;;
+               *) mkdir -p $mntpnt ;;
+        esac
 
         case "$type" in
             ntfs*)  chmod 0777 $mntpnt
