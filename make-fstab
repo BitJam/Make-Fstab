@@ -472,7 +472,7 @@ BLKID
         [ "$AM_ROOT" ] && mount $mntpnt
 
     done << BLKID
-$($SUDO blkid -o device)
+$($SUDO blkid -o device -c /dev/null)
 BLKID
 }
 
@@ -536,8 +536,14 @@ write_hd_entry() {
     local marker="$MARKER $dev"
     [ "$label" ] && marker="$marker  label=$label"
 
-    [ -z "$INSTALL_MP" ] && echo "$marker"                              >> $FSTAB_FILE
-    printf "$FSTAB_FORMAT" "$ident" "$mntpnt" "$type" "$options" "0 0"  >> $FSTAB_FILE
+    local dump_pass="0 0"
+    if [ "$INSTALL_MP" ]; then
+        options=default
+        [ $type = swap ] || dump_pass="1 1"
+    else
+        echo "$marker"                                                        >> $FSTAB_FILE
+    fi
+    printf "$FSTAB_FORMAT" "$ident" "$mntpnt" "$type" "$options" "$dump_pass" >> $FSTAB_FILE
 }
 
 #------------------------------------------------------------------------------
@@ -763,7 +769,6 @@ lock_file() {
         trap unlock EXIT
     fi
 }
-
 
 #------------------------------------------------------------------------------
 # Function: unlock
