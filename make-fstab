@@ -164,10 +164,14 @@ main() {
         mountpoint "$INSTALL_MP" 1>/dev/null 2>/dev/null \
             || arg_fatal "$INSTALL_MP is not a mountpoint"
 
+        MP_DIR=/mnt
+        REAL_MP_DIR=$INSTALL_MP$MP_DIR
         FSTAB_FILE=$INSTALL_MP$FSTAB_FILE
         mkdir -p $(dirname $FSTAB_FILE)
         rm -f $FSTAB_FILE
-        mkdir -p $INSTALL_MP$MP_DIR
+        mkdir -p $MP_DIR
+    else
+        REAL_MP_DIR=$MP_DIR
     fi
 
     # Make debugging easy for non-root users
@@ -178,6 +182,7 @@ main() {
               SUDO=sudo
         FSTAB_FILE=$(basename $FSTAB_FILE)
             MP_DIR=$(basename $MP_DIR)
+       REAL_MP_DIR=$(basename $REAL_MP_DIR)
          LOCK_FILE=$(basename $LOCK_FILE)
           LOG_FILE=$(basename $LOG_FILE)
     fi
@@ -427,9 +432,12 @@ BLKID
         local mntpnt="$(echo "$MOUNTED_DEVS" | grep "^$dev " | cut -d" " -f2 | head -n1)"
 
         if [ "$install_mp" ]; then
-            [ "$mntpnt" ] || continue
+            #[ "$mntpnt" ] || continue
             mntpnt=$(echo "$mntpnt" | sed -n -e "s=^$install_mp$=/=p" -e "s=^$install_mp==p")
-            [ "$mntpnt" ] || continue
+            if [ -z "$mntpnt" ]; then
+                is_usb_or_removable $dev && continue
+                mntpnt=$(unique_mp "$dev" "$uuid" "$label")
+            fi
         else
             [ "$mntpnt" ] || mntpnt=$(unique_mp "$dev" "$uuid" "$label")
         fi
@@ -538,8 +546,12 @@ write_hd_entry() {
 
     local dump_pass="0 0"
     if [ "$INSTALL_MP" ]; then
-        options=default
-        [ $type = swap ] || dump_pass="1 1"
+        if [ "${mntpnt##$INSTALL_MP$MP_DIR/*}" ]; then
+            options=default
+            [ $type = swap ] || dump_pass="1 1"
+        else
+            mntpnt=${mntpnt#$INSTALL_MP}
+        fi
     else
         echo "$marker"                                                        >> $FSTAB_FILE
     fi
@@ -597,13 +609,13 @@ write_cdrom_entries() {
         esac
 
         if [ "$INSTALL_MP" ]; then 
-            mntpnt=$MP_DIR/${dev#/dev/}
-            mkdir -p $INSTALL_MP$mntpnt
+            mntpnt=$(unique_mp $dev)
+            mkdir -p $mntpnt
+            mntpnt=${mntpnt#$INSTALL_MP}
         else
             mntpnt=$(echo "$MOUNTED_DEVS" | grep "^$real_dev " | cut -d" " -f2 | head -n1)
-
             if [ -z "$mntpnt" ]; then
-                mntpnt=$MP_DIR/${dev#/dev/}
+                mntpnt=$(unique_mp $dev)
                 mkdir -p $mntpnt
             fi
         fi
@@ -705,7 +717,7 @@ first_free_mp() {
 can_use_mp() {
 
     # Create trial mntpnt with bad chars converted to underscore
-    local mp="$MP_DIR/$(printf %s "$1" | sed -r s'=(\s|[_/])+=_=g')"
+    local mp="$REAL_MP_DIR/$(printf %s "$1" | sed -r s'=(\s|[_/])+=_=g')"
 
     # If it is already in use return failure
     mountpoint -q $mp && return 1
