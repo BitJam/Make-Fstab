@@ -164,7 +164,7 @@ main() {
         mountpoint "$INSTALL_MP" 1>/dev/null 2>/dev/null \
             || arg_fatal "$INSTALL_MP is not a mountpoint"
 
-        MP_DIR=/mnt
+        #MP_DIR=/mnt
         REAL_MP_DIR=$INSTALL_MP$MP_DIR
         FSTAB_FILE=$INSTALL_MP$FSTAB_FILE
         mkdir -p $(dirname $FSTAB_FILE)
