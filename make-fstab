@@ -547,7 +547,7 @@ write_hd_entry() {
     local dump_pass="0 0"
     if [ "$INSTALL_MP" ]; then
         if [ "${mntpnt##$INSTALL_MP$MP_DIR/*}" ]; then
-            options=default
+            options=defaults
             [ $type = swap ] || dump_pass="1 1"
         else
             mntpnt=${mntpnt#$INSTALL_MP}
