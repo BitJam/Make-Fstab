@@ -453,8 +453,8 @@ BLKID
         write_hd_entry "$dev" "$mntpnt" "$type" "$uuid" "$label"
         SD_CNT=$((SD_CNT + 1))
 
-        # Only mkdir and automount if mntpnt is under MP_DIR
-        [ -z "${mntpnt##$MP_DIR/*}" ] || continue
+        # Only mkdir and automount if mntpnt is under REAL_MP_DIR
+        [ -z "${mntpnt##$REAL_MP_DIR/*}" ] || continue
 
         mkdir -p $mntpnt
 
