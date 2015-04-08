@@ -536,7 +536,7 @@ write_hd_entry() {
     esac
 
     # If mntpnt is under MP_DIR
-    [ -z "${mntpnt##$MP_DIR/*}" ] && options=$options,users
+    [ -z "${mntpnt##$REAL_MP_DIR/*}" ] && options=$options,users
 
     local ident="$dev"
     [ -n "$USE_UUID" -a -n "$uuid" ] && ident="UUID=$uuid"
