@@ -480,7 +480,8 @@ BLKID
         [ "$AM_ROOT" ] && mount $mntpnt
 
     done << BLKID
-$($SUDO blkid -o device -c /dev/null | sort)
+$($SUDO blkid -o device -c /dev/null \
+    | sed -r 's/([a-z])([0-9])$/\10\2/' | sort | sed -r 's/([a-z])0([0-9])$/\1\2/')
 BLKID
 }
 
