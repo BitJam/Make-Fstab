@@ -161,15 +161,17 @@ main() {
 
     if [ "$INSTALL_MP" ]; then
         UPDATE_MODE=
+        DO_INSTALL=true
         mountpoint "$INSTALL_MP" 1>/dev/null 2>/dev/null \
             || arg_fatal "$INSTALL_MP is not a mountpoint"
 
-        #MP_DIR=/mnt
+        INSTALL_MP=${INSTALL_MP%/}
         REAL_MP_DIR=$INSTALL_MP$MP_DIR
         FSTAB_FILE=$INSTALL_MP$FSTAB_FILE
         mkdir -p $(dirname $FSTAB_FILE)
         rm -f $FSTAB_FILE
         mkdir -p $MP_DIR
+        MP_USE_UUID=true
     else
         REAL_MP_DIR=$MP_DIR
     fi
@@ -356,13 +358,13 @@ do_create_mode() {
     fi
 
     SD_CNT=0
-    write_hard_drive_entries $INSTALL_MP
+    write_hard_drive_entries "$DO_INSTALL" $INSTALL_MP
     qsay "$(plural $SD_CNT "Put %n hard drive entr%ies into $FSTAB_FILE")"
 
     [ -n "$SWAP_ONLY" ] && vamoose "Swap only"
 
     SR_CNT=0
-    write_cdrom_entries 
+    write_cdrom_entries
     qsay "$(plural $SR_CNT "Put %n removable entr%ies into $FSTAB_FILE")"
 }
 
@@ -382,7 +384,7 @@ do_create_mode() {
 #------------------------------------------------------------------------------
 write_hard_drive_entries() {
 
-    local dev label uuid install_mp=$1
+    local dev label uuid do_install=$2 install_mp=$2
     while read dev; do
 
         test -b $dev || continue
@@ -431,7 +433,7 @@ BLKID
 
         local mntpnt="$(echo "$MOUNTED_DEVS" | grep "^$dev " | cut -d" " -f2 | head -n1)"
 
-        if [ "$install_mp" ]; then
+        if [ "$do_install" ]; then
             #[ "$mntpnt" ] || continue
             mntpnt=$(echo "$mntpnt" | sed -n -e "s=^$install_mp$=/=p" -e "s=^$install_mp==p")
             if [ -z "$mntpnt" ]; then
@@ -546,7 +548,7 @@ write_hd_entry() {
     [ "$label" ] && marker="$marker  label=$label"
 
     local dump_pass="0 0"
-    if [ "$INSTALL_MP" ]; then
+    if [ "$DO_INSTALL" ]; then
         if [ "${mntpnt##$INSTALL_MP$MP_DIR/*}" ]; then
             options=defaults
             [ $type = swap ] || dump_pass="1 1"
@@ -609,7 +611,7 @@ write_cdrom_entries() {
                 ;;
         esac
 
-        if [ "$INSTALL_MP" ]; then 
+        if [ "$DO_INSTALL" ]; then
             mntpnt=$(unique_mp $dev)
             mkdir -p $mntpnt
             mntpnt=${mntpnt#$INSTALL_MP}
@@ -621,7 +623,7 @@ write_cdrom_entries() {
             fi
         fi
 
-        [ "$MARKER" -a -z "$INSTALL_MP" ] && echo "$MARKER $dev"              >> $FSTAB_FILE
+        [ "$MARKER" -a -z "$DO_INSTALL" ] && echo "$MARKER $dev"              >> $FSTAB_FILE
         printf "$FSTAB_FORMAT" "$dev" "$mntpnt" "$type" "$options$mode" "0 0" >> $FSTAB_FILE
 
         SR_CNT=$((SR_CNT + 1))
