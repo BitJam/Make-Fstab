@@ -479,7 +479,12 @@ BLKID
         [ "$CMD_MOUNT" = usb ] && ! is_usb_or_removable $dev && continue
 
         qsay "Automount $dev at $mntpnt"
-        [ "$AM_ROOT" ] && mount $mntpnt
+        [ "$AM_ROOT" ] || continue
+
+        case $type in
+            btrfs) modprobe -q $type 2>/dev/null;;
+        esac
+        mount $mntpnt
 
     done << BLKID
 $($SUDO blkid -o device -c /dev/null \
