@@ -39,7 +39,7 @@
          MP_DIR=/media
       LOCK_FILE=/run/lock/fstab.lock
      FSTAB_FILE=/etc/fstab
-       LOG_FILE=/var/log/make-fstab.log
+       LOG_FILE=/var/log/live/make-fstab.log
 
        USE_UUID=true
 
@@ -191,6 +191,8 @@ main() {
 
       HOTPLUG_FILE=$FSTAB_FILE.hotplug
     AUTOMOUNT_FILE=$FSTAB_FILE.automount
+
+    [ "$LOG_FILE" ] && mkdir -p $(dirname $LOG_FILE)
 
     if [ "$UPDATE_MODE" ]; then
 
