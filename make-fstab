@@ -513,8 +513,8 @@ write_hd_entry() {
             return 0
             ;;
 
-        ext[234]|adfs|affs|btrfs|cifs|coda|cramfs|efs|hfs|hfsplus) ;;
-        hpfs|jfs|minix|ncpfs|nfs|qnx4|romfs|sysv|ubifs|ufs|xfs)    ;;
+        ext[234]|adfs|affs|btrfs|cifs|coda|cramfs|efs|exfat|hfs)           ;;
+        hfsplus|hpfs|jfs|minix|ncpfs|nfs|qnx4|romfs|sysv|ubifs|ufs|xfs)    ;;
 
         reiserfs)
             options=$options,notail
