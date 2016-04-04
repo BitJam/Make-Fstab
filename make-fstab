@@ -258,7 +258,7 @@ do_update_mode() {
 
     case "$ACTION" in
 
-    add|change)
+    add)
 
         [ "$type" ] || vamoose "no filesystem type"
         # Remove the fstab entry if it was created by us
