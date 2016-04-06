@@ -782,7 +782,7 @@ lock_file() {
         exec 8> $LOCK_FILE
         flock -x 8
         FLOCKED=true
-        trap unlock EXIT
+        #trap unlock EXIT
     else
 
         # No flock so roll our own.  Collisions are unlikely but possible.
@@ -791,7 +791,7 @@ lock_file() {
             read pid relax < $LOCK_FILE
             [ "$pid" ] || break
             test -d /proc/"$pid" >/dev/null 2>/dev/null || break
-            sleep 1
+            sleep .2
         done
 
         echo $$ > $LOCK_FILE
