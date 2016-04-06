@@ -199,7 +199,7 @@ main() {
     if [ "$UPDATE_MODE" ]; then
 
         [ "$DEVNAME" ]       || vamoose "no device name"
-        [ "$ID_FS_UUID" ]    || vamoose "no filesystem uuid"
+        [ "$ID_FS_UUID" ]    || vamoose "$DEVNAME: no filesystem uuid"
         [ -e $HOTPLUG_FILE ] || vamoose "no fstab.hotplug file"
 
         CMD_DIRS="$CMD_DIRS,$(cat $HOTPLUG_FILE 2>/dev/null)"
@@ -252,11 +252,13 @@ do_update_mode() {
         label=$ID_FS_LABEL_ENC
     fi
 
-    [ "$DEBUG" ] && echo        >> $LOG_FILE
-    log "update mode"
-    log "dev=$dev action=$ACTION type=$type uuid=$uuid label=$label"
-    [ "$DEBUG" ] && date        >> $LOG_FILE
-    [ "$DEBUG" ] && env | sort  >> $LOG_FILE
+    #[ "$DEBUG" ] && echo        >> $LOG_FILE
+    local pid=$$
+    local start_t=$(cut -d" " -f22 /proc/$pid/stat)
+    local   now_t=$(cut -d" " -f22 /proc/self/stat)
+    #log "update mode: "
+    #[ "$DEBUG" ] && date        >> $LOG_FILE
+    #[ "$DEBUG" ] && env | sort  >> $LOG_FILE
 
     case "$ACTION" in
 
@@ -330,6 +332,11 @@ do_update_mode() {
         done
         ;;
     esac
+
+    local end_t=$(cut -d" " -f22 /proc/self/stat)
+    local dt1=$((now_t - start_t))
+    local dt2=$((end_t - now_t))
+    log "%s\n@%10d  dt1:%4d  dt2:%4d\n" "$ACTION:$dev fs=$type  lab=$label" $start_t $dt1 $dt2
 }
 
 #------------------------------------------------------------------------------
@@ -915,7 +922,10 @@ plural() {
 # Append <message> to the log file.
 #------------------------------------------------------------------------------
 log() {
-    [ "$LOG_FILE" ] && echo "$*" >> $LOG_FILE
+    [ "$LOG_FILE" ] || return
+    local fmt="$1"
+    shift
+    printf  "$fmt\n" "$@" >> $LOG_FILE
 }
 
 main "$@"
