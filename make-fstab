@@ -58,6 +58,7 @@ usage() {
     cat << Usage
 Usage: $ME [options]
 Options:
+  -b --bg                 Run "mount" and "umount" in a background process
   -c --create             Force normal mode
   -d --dirs=<options>     Create mountpoint directories based on:
                           label|nolabel|uuid|nouuid|encode|noencode
@@ -120,6 +121,7 @@ read_cmdline() {
         esac
 
         case $arg in
+                               -bg|b)         IN_BG=true  ;;
                            -create|c)   UPDATE_MODE=      ;;
                              -delete)   DELETE_MODE=true  ;;
                  -dirs=*|d=*|-dirs|d)      CMD_DIRS=$val  ;;
@@ -294,9 +296,7 @@ do_update_mode() {
                     [ "$AM_ROOT" ] && chown root:users $mntpnt ;;
         esac
 
-        [ -e $AUTOMOUNT_FILE ]  || return
-
-        [ "$AM_ROOT" ] && mount $mntpnt
+        [ -e $AUTOMOUNT_FILE -a -n "$AM_ROOT" ] && launch mount $mntpnt
 
         ;;
 
@@ -812,6 +812,14 @@ write_header() {
 HEADER
     printf "$FSTAB_FORMAT" "# <file system>" "<mount point>" "<type>" "<options>" "<dump/pass>"
     echo
+}
+
+launch() {
+    if [ "$IN_BG" ]; then
+        "$@" </dev/null >/dev/null 2>&1 &
+    else
+        "$@"
+    fi
 }
 
 #==============================================================================
