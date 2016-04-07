@@ -199,7 +199,7 @@ main() {
     if [ "$UPDATE_MODE" ]; then
 
         [ "$DEVNAME" ]       || vamoose "no device name"
-        [ "$ID_FS_UUID" ]    || vamoose "$DEVNAME: no filesystem uuid"
+        [ "$ID_FS_UUID" ]    || vamoose "$ACTION $DEVNAME: no filesystem uuid"
         [ -e $HOTPLUG_FILE ] || vamoose "no fstab.hotplug file"
 
         CMD_DIRS="$CMD_DIRS,$(cat $HOTPLUG_FILE 2>/dev/null)"
@@ -865,7 +865,7 @@ arg_fatal() {
 # Then exit.
 #------------------------------------------------------------------------------
 vamoose() {
-    local msg="$(printf "Exit because: $@")"
+    local msg="$(printf "Exit: $@")"
     log "$msg"
     [ "$VERBOSE" ] && echo "  $ME: $msg"
     exit 0
