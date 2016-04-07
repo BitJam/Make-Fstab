@@ -340,7 +340,7 @@ do_update_mode() {
     local end_t=$(cut -d" " -f22 /proc/self/stat)
     local dt1=$((now_t - start_t))
     local dt2=$((end_t - now_t))
-    log "%s\n@%10d  dt1:%4d  dt2:%4d\n" "$ACTION:$dev fs=$type  lab=$label" $start_t $dt1 $dt2
+    log "%s@%10d  dt1:%4d  dt2:%4d\n" "$ACTION:$dev fs=$type  lab=$label" $start_t $dt1 $dt2
 }
 
 #------------------------------------------------------------------------------
