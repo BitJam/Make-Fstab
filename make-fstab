@@ -293,13 +293,17 @@ do_update_mode() {
                *) mkdir -p $mntpnt ;;
         esac
 
-        case "$type" in
+        case $type in
             ntfs*)  chmod 0777 $mntpnt
                     [ "$AM_ROOT" ] && chown root:users $mntpnt ;;
         esac
 
-        [ -e $AUTOMOUNT_FILE -a -n "$AM_ROOT" ] && launch mount $mntpnt
-
+        if [ -e $AUTOMOUNT_FILE -a -n "$AM_ROOT" ]; then
+            case $type in
+                ntfs|exfat) ;;
+                         *) mount $mntpnt ;;
+                esac
+        fi
         ;;
 
     remove)
