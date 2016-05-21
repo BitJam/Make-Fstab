@@ -1,2 +1,2 @@
-ACTION=="add|change|remove",SUBSYSTEM=="block",KERNEL=="sd*" \
+ACTION=="add|change|remove",SUBSYSTEM=="block",KERNEL=="sd*|mmcblk*" \
 RUN+="/bin/sh -c '/sbin/make-fstab --update'"
