@@ -245,6 +245,8 @@ do_update_mode() {
 
     local dev="$DEVNAME" type="$ID_FS_TYPE" uuid="$ID_FS_UUID" label="$ID_FS_LABEL"
 
+    local act
+
     if [ "$DO_ENCODE" ]; then
         uuid=$ID_FS_UUID_ENC
         label=$ID_FS_LABEL_ENC
@@ -299,7 +301,7 @@ do_update_mode() {
         if [ -e $AUTOMOUNT_FILE -a -n "$AM_ROOT" ]; then
             case $type in
                 ntfs|exfat) ;;
-                         *) mount $mntpnt ;;
+                         *) mount $mntpnt ; act="mount $mntpnt";;
                 esac
         fi
         ;;
@@ -307,8 +309,9 @@ do_update_mode() {
     remove)
         # First unmount the device but it is probably already way too late
         if grep -q "^$dev " /proc/mounts; then
-            log "umount $dev"
+            #log "umount $dev"
             umount -drf $dev 1>/dev/null 2>/dev/null
+            act="umount -drf $dev"
             grep -q "^$dev " /proc/mounts && umount -l $dev 1>/dev/null 2>/dev/null
         fi
 
@@ -338,7 +341,7 @@ do_update_mode() {
     local end_t=$(cut -d" " -f22 /proc/self/stat)
     local dt1=$((now_t - start_t))
     local dt2=$((end_t - now_t))
-    log "%-6s %12s %8s %16s  @%10d  %4d  %4d" "$ACTION" "$dev" "$type"  "$label" $start_t $dt1 $dt2
+    log "%-6s %12s %8s %16s  @%10d  %4d  %4d %s" "$ACTION" "$dev" "$type"  "$label" $start_t $dt1 $dt2 "$act"
 }
 
 #------------------------------------------------------------------------------
