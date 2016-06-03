@@ -405,7 +405,7 @@ write_hard_drive_entries() {
 
         # Major-number 8 = SCSI hard drive, major-number 3 = non-SCSI hard drive
         case $(stat -c %t $dev) in
-            b3|[38]) ;;
+            b3|103|[38]) ;;
             *) continue
         esac
 
