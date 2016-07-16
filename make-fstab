@@ -23,8 +23,8 @@
 #-----------------------------------------------------------------------
 
              ME=$(basename $0)
-        VERSION=2.2.2
-   VERSION_DATE="Mon Apr  6 02:05:58 MDT 2015"
+        VERSION=2.3.00
+   VERSION_DATE="Thu Jun 30 12:18:15 MDT 2016"
 
      SD_OPTIONS=noauto,exec
    NTFS_OPTIONS=noauto,noexec,uid=1000,gid=users,dmask=002,fmask=113
@@ -46,6 +46,7 @@
       DO_ENCODE=
     MP_USE_UUID=
    MP_USE_LABEL=true
+       LAZYTIME=
 
 PATH="/bin:/sbin:/usr/bin:/usr/sbin"; export PATH
 
@@ -67,6 +68,7 @@ Options:
   -h --help               Show this usage
   -i --install=<mntpnt>   Make an fstab for a system that is being installed
   -l --log-file=<file>    Use <file> as the log file (default: make-fstab.log)
+  -L --lazytime           Use "lazytime" on ext4
   -m --mount=[usb|all]    Mount these devices when building fstab
   -M --mntpnt=<dir>       Directory where mountpoints are created
   -n --no-log             Disable logging
@@ -120,22 +122,23 @@ read_cmdline() {
         esac
 
         case $arg in
-                           -create|c)   UPDATE_MODE=      ;;
-                             -delete)   DELETE_MODE=true  ;;
-                 -dirs=*|d=*|-dirs|d)      CMD_DIRS=$val  ;;
-                            -debug|D)         DEBUG=true  ;;
-               -fstab=*|f=*|-fstab|f)    FSTAB_FILE=$val  ;;
-                             -help|h)         usage       ;;
-           -install=*|i=*|-install|i)    INSTALL_MP=$val  ;;
-         -log-file=*|l=*|-log-file|l)      LOG_FILE=$val  ;;
-               -mount=*|m=*|-mount|m)     CMD_MOUNT=$val  ;;
-             -mntpnt=*|m=*|-mntpnt|m)        MP_DIR=$val  ;;
-                           -no-log|n)      LOG_FILE=      ;;
-                          -no-uuid|N)      USE_UUID=      ;;
-                            -quiet|q)         QUIET=true  ;;
-                        -swap-only|s)     SWAP_ONLY=true  ;;
-                           -update|u)   UPDATE_MODE=true  ;;
-                          -verbose|v)       VERBOSE=true  ;;
+                           -create|c)   UPDATE_MODE=            ;;
+                             -delete)   DELETE_MODE=true        ;;
+                 -dirs=*|d=*|-dirs|d)      CMD_DIRS=$val        ;;
+                            -debug|D)         DEBUG=true        ;;
+               -fstab=*|f=*|-fstab|f)    FSTAB_FILE=$val        ;;
+                             -help|h)         usage             ;;
+           -install=*|i=*|-install|i)    INSTALL_MP=$val        ;;
+         -log-file=*|l=*|-log-file|l)      LOG_FILE=$val        ;;
+               -mount=*|m=*|-mount|m)     CMD_MOUNT=$val        ;;
+             -mntpnt=*|m=*|-mntpnt|m)        MP_DIR=$val        ;;
+                           -no-log|n)      LOG_FILE=            ;;
+                          -no-uuid|N)      USE_UUID=            ;;
+                         -lazytime|L)      LAZYTIME=",lazytime" ;;
+                            -quiet|q)         QUIET=true        ;;
+                        -swap-only|s)     SWAP_ONLY=true        ;;
+                           -update|u)   UPDATE_MODE=true        ;;
+                          -verbose|v)       VERBOSE=true        ;;
                                    *) arg_fatal "Unknown parameter: -$arg" ;;
         esac
     done
@@ -158,6 +161,7 @@ main() {
 
     # Override default with command line parameters
     read_cmdline "$@"
+    [ $(uname -r | cut -d. -f1) -lt 4 ] && LAZYTIME=
 
     if [ "$INSTALL_MP" ]; then
         UPDATE_MODE=
@@ -525,7 +529,7 @@ write_hd_entry() {
             return 0
             ;;
 
-        ext4) options=$options,lazytime                                    ;;
+        ext4) options=$options$LAZYTIME                                    ;;
         ext[234]|adfs|affs|btrfs|cifs|coda|cramfs|efs|exfat|hfs)           ;;
         hfsplus|hpfs|jfs|minix|ncpfs|nfs|qnx4|romfs|sysv|ubifs|ufs|xfs)    ;;
 
