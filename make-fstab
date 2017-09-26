@@ -36,7 +36,7 @@
 
    FSTAB_FORMAT="%-42s %-43s %-10s %-30s  %s\n"
 
-         MP_DIR=/media
+         MP_DIR=/mnt/live
       LOCK_FILE=/run/lock/fstab.lock
      FSTAB_FILE=/etc/fstab
        LOG_FILE=/var/log/live/make-fstab.log
@@ -79,7 +79,7 @@ Options:
   -v --verbose            Verbose mode: print more
 
 If called as a normal user then all input and output files default to
-the current working directory.  Device mountpoints are put in .$MP_DIR
+the current working directory.  Device mountpoints are put in $MP_DIR
 
 Usage
 
@@ -398,7 +398,7 @@ do_create_mode() {
 #
 # If a device is already mounted (but not yet in fstab) then we add an entry
 # for it using the existing mountpoint.  Otherwise we create a mountpoint for
-# the device under /media.
+# the device under /mnt/live.
 #------------------------------------------------------------------------------
 write_hard_drive_entries() {
 
@@ -455,6 +455,8 @@ BLKID
             #[ "$mntpnt" ] || continue
             mntpnt=$(echo "$mntpnt" | sed -n -e "s=^$install_mp$=/=p" -e "s=^$install_mp==p")
             if [ -z "$mntpnt" ]; then
+                # If mount point is not under install_mp then ignore it
+                continue
                 is_usb_or_removable $dev && continue
                 mntpnt=$(unique_mp "$dev" "$uuid" "$label")
             fi
@@ -738,7 +740,7 @@ first_free_mp() {
 #------------------------------------------------------------------------------
 # Function: can_use_mp <subdir>
 #
-# If /media/<subdir> is a valid new mountpoint then echo it and return true.
+# If /mnt/live/<subdir> is a valid new mountpoint then echo it and return true.
 # Otherwise don't echo anything and return false.
 #------------------------------------------------------------------------------
 can_use_mp() {
