@@ -23,8 +23,8 @@
 #-----------------------------------------------------------------------
 
              ME=$(basename $0)
-        VERSION=2.3.00
-   VERSION_DATE="Thu Jun 30 12:18:15 MDT 2016"
+        VERSION="2.3.01"
+   VERSION_DATE="Mon Sep 25 22:50:04 MDT 2017"
 
      SD_OPTIONS=noauto,exec
    NTFS_OPTIONS=noauto,noexec,uid=1000,gid=users,dmask=002,fmask=113
