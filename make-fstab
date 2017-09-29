@@ -462,12 +462,12 @@ BLKID
         vsay "raw label: <%s>  label_inc: <%s>" "$label_raw" "$label"
 
         # this should always run
-        [ -z "$ENCODE_LABEL" ] && label=$raw_label
+        [ -z "$ENCODE_LABEL" ] && label=$label_raw
 
         [ "$EXISTING_DEVS" ] && echo "$EXISTING_DEVS" | egrep -q "^$name$|^UUID=$uuid$" && continue
 
         if [ "$fstype" = swap ]; then
-            write_hd_entry "$name" "" "$fstype" "$uuid" "$label" "$label" "$raw_label"
+            write_hd_entry "$name" "" "$fstype" "$uuid" "$label" "$label" "$label_raw"
             SD_CNT=$((SD_CNT + 1))
             continue
         fi
@@ -499,7 +499,7 @@ BLKID
         # Don't use a bogus UUID in first fstab field
         [ "$uuid_raw" != "$uuid_enc" ] && UUID=
 
-        write_hd_entry "$name" "$mntpnt" "$fstype" "$uuid" "$label" "$raw_label"
+        write_hd_entry "$name" "$mntpnt" "$fstype" "$uuid" "$label" "$label_raw"
         SD_CNT=$((SD_CNT + 1))
 
         # Only mkdir and automount if mntpnt is under REAL_MP_DIR
@@ -547,7 +547,7 @@ List_Devs
 # the mountpoint.  Used in both update-mode and create-mode.
 #------------------------------------------------------------------------------
 write_hd_entry() {
-    local dev="$1" mntpnt="$2" type="$3" uuid="$4" label="$5" raw_label="${6:-$5}"
+    local dev="$1" mntpnt="$2" type="$3" uuid="$4" label="$5" label_raw="${6:-$5}"
 
     vsay "write_hd_entry dev=$dev mntpnt=$mntpnt type=$type uuid=$uuid"
 
@@ -598,13 +598,14 @@ write_hd_entry() {
     [ -n "$USE_UUID" -a -n "$uuid" ] && ident="UUID=$uuid"
 
     local marker="$MARKER $dev"
-    [ "$raw_label" ] && marker="$marker  label=$raw_label"
+    [ "$label_raw" ] && marker="$marker  label=$label_raw"
 
-    local fstab_file=$FSTAB_FILE
+    local fstab_file=$FSTAB_FILE dump_pass="0 0"
     if [ "$DO_INSTALL" ]; then
         if [ "${mntpnt##$INSTALL_MP$MP_DIR/*}" ]; then
             options=defaults
-            [ $type = swap ] || dump_pass="1 1"
+            [ $type = swap ] || dump_pass="1 2"
+            [ "$mntpnt" = "/" ] && dump_pass="1 1"
         else
             mntpnt=${mntpnt#$INSTALL_MP}
         fi
@@ -617,7 +618,6 @@ write_hd_entry() {
                 $mp_dir/*) fstab_file=$FSTAB_FILE.3 ;;
                         *) fstab_file=$FSTAB_FILE.1 ;;
         esac
-    local dump_pass="0 0"
         echo "$marker"                                                        >> $fstab_file
     else
         echo "$marker"                                                        >> $fstab_file
