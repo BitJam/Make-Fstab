@@ -417,47 +417,66 @@ write_hard_drive_entries() {
 
     # Don't do_install to /, hence $2, $2
     local do_install=$2 install_mp=$2
-    local NAME FSTYPE LABEL PARTTYPE TYPE MOUNTPOINT UUID
 
-    local line
-    while read line; do
-        #local line val uuid_enc= label_enc= uuid_raw= type=
-        [ ${#line} -gt 0 -a -z "${line##NAME=*}" ] || continue
-        eval "$line"
+    local name
+    while read name; do
 
-        NAME="/dev/${NAME#/dev/}"
+        name="/dev/${name#/dev/}"
+        test -b $name || continue
 
-        [ "$TYPE" = "disk" ] && continue
-
-        # Ignore extended boot record partitions
-        case $PARTTYPE in 0xf) continue;; esac
+        # Major-number 8 = SCSI hard drive, major-number 3 = non-SCSI hard drive
+        case $(stat -c %t $name) in
+            b3|103|[38]) ;;
+            *) continue
+        esac
 
         # Ignore devices handled by cdrom code below
-        case $NAME in
+        case $name in
             /dev/cdrom*|/dev/cdrw*|/dev/dvd*|/dev/fd[0-9]*) continue ;;
             /dev/floppy*|/dev/scd[0-9]*|/dev/sr[0-9]*)      continue ;;
         esac
 
-        local label=$LABEL raw_label=$(lsblk -no-header --output label $NAME)
-        vsay "raw label: <%s>  label: <%s>" "$raw_label" "$LABEL"
+        local line val label= uuid= uuid_enc= label_enc= uuid_raw= label_raw= fstype=
+        while read line; do
+            val=${line#*=}
+            case $line in
+                 ID_FS_UUID_ENC=*)   uuid_enc=$val ;;
+                ID_FS_LABEL_ENC=*)  label_enc=$val ;;
+                     ID_FS_UUID=*)   uuid_raw=$val ;;
+                    ID_FS_LABEL=*)  label_raw=$val ;;
+                     ID_FS_TYPE=*)     fstype=$val ;;
+            esac
+        done <<BLKID
+$($SUDO blkid -o udev $name)
+BLKID
+       [ "$fstype" ] || continue
+
+        if [ "$DO_ENCODE" ]; then
+            uuid=$uuid_enc
+            label=$label_enc
+        else
+            uuid=$uuid_raw
+            label=$label_raw
+        fi
+
+        vsay "raw label: <%s>  label_inc: <%s>" "$label_raw" "$label"
 
         # this should always run
         [ -z "$ENCODE_LABEL" ] && label=$raw_label
 
-        [ "$EXISTING_DEVS" ] && echo "$EXISTING_DEVS" | egrep -q "^$NAME$|^UUID=$UUID$" && continue
+        [ "$EXISTING_DEVS" ] && echo "$EXISTING_DEVS" | egrep -q "^$name$|^UUID=$uuid$" && continue
 
-        if [ "$FSTYPE" = swap ]; then
-            write_hd_entry "$NAME" "" "$FSTYPE" "$UUID" "$label" "$label" "$raw_label"
+        if [ "$fstype" = swap ]; then
+            write_hd_entry "$name" "" "$fstype" "$uuid" "$label" "$label" "$raw_label"
             SD_CNT=$((SD_CNT + 1))
             continue
         fi
 
         [ "$SWAP_ONLY" ] && continue
 
-        local mntpnt=$MOUNTPOINT
+        local mntpnt="$(echo "$MOUNTED_DEVS" | grep "^$name " | cut -d" " -f2 | head -n1)"
 
         if [ "$do_install" ]; then
-            #[ "$mntpnt" ] || continue
 
             # Convert to mount point relative to install_mp
             # We use sed here so non-matching mountpoints become empty
@@ -465,30 +484,30 @@ write_hard_drive_entries() {
             if [ -z "$mntpnt" ]; then
                 # If not under install_mp then ignore it unless --mntpnt is given
                 [ -n "$CMD_MP_DIR" ] || continue
-                is_usb_or_removable $NAME && continue
-                mntpnt=$(unique_mp "$NAME" "$UUID" "$label")
+                is_usb_or_removable $name && continue
+                mntpnt=$(unique_mp "$name" "$uuid" "$label")
             fi
         else
-            [ "$mntpnt" ] || mntpnt=$(unique_mp "$NAME" "$UUID" "$label")
+            [ "$mntpnt" ] || mntpnt=$(unique_mp "$name" "$uuid" "$label")
         fi
 
         if [ -z "$mntpnt" ]; then
-            error "Problem finding mountpoint for device $NAME"
+            error "Problem finding mountpoint for device $name"
             continue
         fi
 
         # Don't use a bogus UUID in first fstab field
         [ "$uuid_raw" != "$uuid_enc" ] && UUID=
 
-        write_hd_entry "$NAME" "$mntpnt" "$FSTYPE" "$UUID" "$label" "$raw_label"
+        write_hd_entry "$name" "$mntpnt" "$fstype" "$uuid" "$label" "$raw_label"
         SD_CNT=$((SD_CNT + 1))
 
         # Only mkdir and automount if mntpnt is under REAL_MP_DIR
         [ -z "${mntpnt##$REAL_MP_DIR/*}" ] || continue
-
+        vsay "mkdir $mntpnt"
         mkdir -p $mntpnt
 
-        case "$FSTYPE" in
+        case "$fstype" in
             ntfs*)  chmod 0777 $mntpnt
                     [ "$AM_ROOT" ] && chown root:users $mntpnt ;;
         esac
@@ -496,26 +515,27 @@ write_hard_drive_entries() {
         # New see if we also automount the device
         [ -n "$CMD_MOUNT" ] || continue
 
-        if [ "$FSTYPE" = ntfs-3g ]; then
-            qsay "Did not automount $FSTYPE filesystem on $NAME"
+        if [ "$fstype" = ntfs-3g ]; then
+            qsay "Did not automount $fstype filesystem on $name"
             continue
         fi
 
         # this test is redundant
         mountpoint -q "$mntpnt" 2>/dev/null && continue
 
-        [ "$CMD_MOUNT" = usb ] && ! is_usb_or_removable $NAME && continue
+        [ "$CMD_MOUNT" = usb ] && ! is_usb_or_removable $name && continue
 
-        qsay "Automount $NAME at $mntpnt"
+        qsay "Automount $name at $mntpnt"
         [ "$AM_ROOT" ] || continue
 
-        case $FSTYPE in
-            btrfs) modprobe -q $FSTYPE 2>/dev/null;;
+        case $fstype in
+            btrfs) modprobe -q $fstype 2>/dev/null;;
         esac
         mount $mntpnt
 
     done << List_Devs
-    $($SUDO lsblk $LSBLK_ARGS -I $MAJOR_DEV_LIST)
+    $($SUDO blkid -o device -c /dev/null \
+    | sed -r 's/([a-z])([0-9])$/\10\2/' | sort | sed -r 's/([a-z])0([0-9])$/\1\2/')
 List_Devs
 }
 
