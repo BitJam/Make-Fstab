@@ -135,7 +135,7 @@ read_cmdline() {
            -install=*|i=*|-install|i)    INSTALL_MP=$val        ;;
          -log-file=*|l=*|-log-file|l)      LOG_FILE=$val        ;;
                -mount=*|m=*|-mount|m)     CMD_MOUNT=$val        ;;
-             -mntpnt=*|m=*|-mntpnt|m)        MP_DIR=$val        ;;
+             -mntpnt=*|m=*|-mntpnt|m)    CMD_MP_DIR=$val        ;;
                            -no-log|n)      LOG_FILE=            ;;
                           -no-uuid|N)      USE_UUID=            ;;
                          -lazytime|L)      LAZYTIME=",lazytime" ;;
