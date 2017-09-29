@@ -3,7 +3,8 @@
 #-----------------------------------------------------------------------
 # make-fstab: Create and update dynamic fstab entries.
 #
-# Copyright 2012 -- 2014 BitJam for antiX <antiX@operamail.com>
+# (C) 2016 -- 2017 Paul Banham <antiX@operamail.com>
+# License: GPLv3 or later
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
