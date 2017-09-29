@@ -85,6 +85,23 @@ Options:
 If called as a normal user then all input and output files default to
 the current working directory.  Device mountpoints are put in $MP_DIR
 
+Examples on a live system:
+
+    make-fstab
+        create an entry and dir for every partition and cdrom under /mnt/live
+
+    make-fstab --swap-only
+        only make swap partition entries
+
+Examples for installing:
+
+    make-fstab --install=/mnt/antiX
+        only make bare number of entries needed: swap, root, /home, /boot
+        (as needed).  Only add entries for partitions mounted at /mnt/antiX
+        or below.
+
+    make-fstab --install=/mnt/antiX --mntpnt=/mnt
+        and also add entries and dirs for everything else under /mnt.
 Usage
 
     exit $ret
