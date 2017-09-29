@@ -40,7 +40,7 @@
 
    FSTAB_FORMAT="%-42s %-43s %-10s %-30s  %s\n"
 
-         MP_DIR=/mnt/live
+         MP_DIR=/media
       LOCK_FILE=/run/lock/fstab.lock
      FSTAB_FILE=/etc/fstab
        LOG_FILE=/var/log/live/make-fstab.log
@@ -88,7 +88,7 @@ the current working directory.  Device mountpoints are put in $MP_DIR
 Examples on a live system:
 
     make-fstab
-        create an entry and dir for every partition and cdrom under /mnt/live
+        create an entry and dir for every partition and cdrom under /media
 
     make-fstab --swap-only
         only make swap partition entries
@@ -797,7 +797,7 @@ first_free_mp() {
 #------------------------------------------------------------------------------
 # Function: can_use_mp <subdir>
 #
-# If /mnt/live/<subdir> is a valid new mountpoint then echo it and return true.
+# If /media is a valid new mountpoint then echo it and return true.
 # Otherwise don't echo anything and return false.
 #------------------------------------------------------------------------------
 can_use_mp() {
