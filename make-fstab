@@ -546,7 +546,8 @@ BLKID
         [ "$AM_ROOT" ] || continue
 
         case $fstype in
-            btrfs) modprobe -q $fstype 2>/dev/null;;
+             vfat) modprobe -q nls-cp437 2>/dev/null ;;
+            btrfs) modprobe -q $fstype   2>/dev/null ;;
         esac
         mount $mntpnt
 
