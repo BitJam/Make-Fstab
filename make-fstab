@@ -466,7 +466,9 @@ write_hard_drive_entries() {
         done <<BLKID
 $($SUDO blkid -o udev $name)
 BLKID
-       [ "$fstype" ] || continue
+        case $fstype in
+           crypto_LUKS|"") continue ;;
+        esac
 
         if [ "$DO_ENCODE" ]; then
             uuid=$uuid_enc
