@@ -318,6 +318,7 @@ do_update_mode() {
         grep -q "^$dev " /proc/mounts  && vamoose "device $dev is already mounted"
 
         case $type in
+     crypto_LUKS) return 0                                            ;;
             swap) local mntpnt=swap                                   ;;
                *) local mntpnt="$(unique_mp "$dev" "$uuid" "$label")" ;;
         esac
