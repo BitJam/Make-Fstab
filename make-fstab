@@ -76,6 +76,7 @@ Options:
   -m --mount=[usb|all]    Mount these devices when building fstab
   -M --mntpnt=<dir>       Directory where mountpoints are created
   -n --no-log             Disable logging
+  -O --no-overwrite       Don't overwrite existing fstab file in install mode
   -N --no-uuid            Don't use UUID in fstab entries
   -q --quiet              Only print errors and warnings
   -s --swap-only          Only add swap partitions to fstab
@@ -115,7 +116,7 @@ Usage
 #------------------------------------------------------------------------------
 read_cmdline() {
 
-    local arg  val  short_stack=cdDfhilmMnNqsuv
+    local arg  val  short_stack=cdDfhilmMnNOqsuv
 
     while [ $# -gt 0 -a -z "${1##-*}" -a -n "$1" ]; do
         arg=${1#-}; shift
@@ -154,6 +155,7 @@ read_cmdline() {
                -mount=*|m=*|-mount|m)     CMD_MOUNT=$val        ;;
              -mntpnt=*|m=*|-mntpnt|m)    CMD_MP_DIR=$val        ;;
                            -no-log|n)      LOG_FILE=            ;;
+                     -no-overwrite|O)  NO_OVERWRITE=true        ;;
                           -no-uuid|N)      USE_UUID=            ;;
                          -lazytime|L)      LAZYTIME=",lazytime" ;;
                             -quiet|q)         QUIET=true        ;;
@@ -199,9 +201,11 @@ main() {
         mkdir -p $(dirname $FSTAB_FILE)
 
         local ext
-        for ext in "" .1 .2 .3; do
+        for ext in .1 .2 .3; do
             rm -f $FSTAB_FILE$ext
         done
+        [ -z "$NO_OVERWRITE" ] && rm -f $FSTAB_FILE
+
         #mkdir -p $MP_DIR
         MP_USE_UUID=true
     else
