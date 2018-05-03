@@ -24,8 +24,8 @@
 #-----------------------------------------------------------------------
 
              ME=$(basename $0)
-        VERSION="2.3.07"
-   VERSION_DATE="Thu Oct 12 20:58:54 MDT 2017"
+        VERSION="2.4.00"
+   VERSION_DATE="Wed May  2 19:56:45 MDT 2018"
 
  MAJOR_DEV_LIST="3,8,22,179,202,259"
      LSBLK_ARGS="--pairs --noheadings --output=name,fstype,label,mountpoint,parttype,type,uuid"
