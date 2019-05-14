@@ -446,7 +446,7 @@ write_hard_drive_entries() {
     # Don't do_install to /, hence $2, $2
     local do_install=$2 install_mp=$2
 
-    if [ -z "$1"  -a -n "$SWAP_FILE" ] &&add_swap_file "$SWAP_FILE"; then
+    if [ -z "$1"  -a -n "$SWAP_FILE" ] && add_swap_file "$SWAP_FILE"; then
         SD_CNT=$((SD_CNT + 1))
         [ "$SWAP_ONLY" ] && return
     fi
