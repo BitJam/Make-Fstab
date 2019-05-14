@@ -24,6 +24,7 @@
 #-----------------------------------------------------------------------
 
              ME=$(basename $0)
+
         VERSION="2.4.00"
    VERSION_DATE="Wed May  2 19:56:45 MDT 2018"
 
@@ -45,6 +46,7 @@
      FSTAB_FILE=/etc/fstab
        LOG_FILE=/var/log/live/make-fstab.log
 
+      SWAP_FILE=
        USE_UUID=true
 
       DO_ENCODE=
@@ -76,9 +78,11 @@ Options:
   -m --mount=[usb|all]    Mount these devices when building fstab
   -M --mntpnt=<dir>       Directory where mountpoints are created
   -n --no-log             Disable logging
+     --no-swap            Disable looking for swap partitions
   -O --no-overwrite       Don't overwrite existing fstab file in install mode
   -N --no-uuid            Don't use UUID in fstab entries
   -q --quiet              Only print errors and warnings
+     --swap-file=<file>   Look for swapfile in this location
   -s --swap-only          Only add swap partitions to fstab
   -u --update             Force update mode
   -v --verbose            Verbose mode: print more
@@ -111,7 +115,7 @@ Usage
 #------------------------------------------------------------------------------
 # Function: read_cmdline <args>
 #
-# Read and process all commadn line arguents in <args>.  Use $short_stack to
+# Read and process all command line arguents in <args>.  Use $short_stack to
 # allow short options to stack: -v -D ==> -vD.
 #------------------------------------------------------------------------------
 read_cmdline() {
@@ -132,7 +136,7 @@ read_cmdline() {
 
         # Deal with options that take a value
         case $arg in
-            -dirs|-fstab|-log-file|-mntpnt|-mount|-install|[dfilmM])
+        -swap-file|-dirs|-fstab|-log-file|-mntpnt|-mount|-install|[dfilmM])
                 [ $# -lt 1 ] && arg_fatal "Expected a parameter after: -$arg"
                 val=$1
                 [ -n "$val" -a -z "${val##-*}" ] \
@@ -154,11 +158,14 @@ read_cmdline() {
          -log-file=*|l=*|-log-file|l)      LOG_FILE=$val        ;;
                -mount=*|m=*|-mount|m)     CMD_MOUNT=$val        ;;
              -mntpnt=*|m=*|-mntpnt|m)    CMD_MP_DIR=$val        ;;
+                            -no-swap)       NO_SWAP=true        ;;
                            -no-log|n)      LOG_FILE=            ;;
                      -no-overwrite|O)  NO_OVERWRITE=true        ;;
                           -no-uuid|N)      USE_UUID=            ;;
                          -lazytime|L)      LAZYTIME=",lazytime" ;;
                             -quiet|q)         QUIET=true        ;;
+                          -swap-file)     SWAP_FILE=$val        ;;
+                        -swap-file=*)     SWAP_FILE=$val        ;;
                         -swap-only|s)     SWAP_ONLY=true        ;;
                            -update|u)   UPDATE_MODE=true        ;;
                           -verbose|v)       VERBOSE=true        ;;
@@ -436,9 +443,13 @@ do_create_mode() {
 #
 #------------------------------------------------------------------------------
 write_hard_drive_entries() {
-
     # Don't do_install to /, hence $2, $2
     local do_install=$2 install_mp=$2
+
+    if [ -z "$1"  -a -n "$SWAP_FILE" ] &&add_swap_file "$SWAP_FILE"; then
+        SD_CNT=$((SD_CNT + 1))
+        [ "$SWAP_ONLY" ] && return
+    fi
 
     local name
     while read name; do
@@ -491,6 +502,7 @@ BLKID
         [ "$EXISTING_DEVS" ] && echo "$EXISTING_DEVS" | egrep -q "^$name$|^UUID=$uuid$" && continue
 
         if [ "$fstype" = swap ]; then
+            [ "$NO_SWAP" ] && continue
             write_hd_entry "$name" "" "$fstype" "$uuid" "$label" "$label" "$label_raw"
             SD_CNT=$((SD_CNT + 1))
             continue
@@ -562,6 +574,17 @@ BLKID
     $($SUDO blkid -o device -c /dev/null \
     | sed -r 's/([a-z])([0-9])$/\10\2/' | sort | sed -r 's/([a-z])0([0-9])$/\1\2/')
 List_Devs
+}
+
+#------------------------------------------------------------------------------
+# Add a swap file on the live system
+#------------------------------------------------------------------------------
+add_swap_file() {
+    local file="$1"
+    test -w "$file" || return 2
+    file -b "$file" | grep -q "swap file" || return 3
+    printf "$FSTAB_FORMAT" "$file" "none" "swap" "defaults" "0 0" >> $FSTAB_FILE
+    return 0
 }
 
 #------------------------------------------------------------------------------
