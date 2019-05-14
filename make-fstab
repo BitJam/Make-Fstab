@@ -583,6 +583,8 @@ add_swap_file() {
     local file="$1"
     test -w "$file" || return 2
     file -b "$file" | grep -q "swap file" || return 3
+
+    [ "$MARKER" -a -z "$DO_INSTALL" ] && echo "$MARKER swap-file" >> $FSTAB_FILE
     printf "$FSTAB_FORMAT" "$file" "none" "swap" "defaults" "0 0" >> $FSTAB_FILE
     return 0
 }
